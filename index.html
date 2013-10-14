@@ -120,7 +120,7 @@
 			}
 
 			var that = this;
-			document.addEventListener('click', function(e) {
+			document.addEventListener('leap', function(e) {
 				e.preventDefault();
 				
 				if (that.ids.indexOf(e.id) !== -1) {
@@ -164,6 +164,9 @@
 	var loops = [];
 	loops.push(new Loop({mp3:'loops/piano_loop_1.mp3', muted:false}));
 	loops.push(new Loop({mp3:'loops/strings_loop_1.mp3', muted:true}));
+	loops.push(new Loop({mp3:'loops/horn_loop_1.mp3', muted:true}));
+	loops.push(new Loop({mp3:'loops/sax_loop_1.mp3', muted:true}));
+	loops.push(new Loop({mp3:'loops/bass_loop_1.mp3', muted:true}));
 
 	Controller.init(loops);
 
@@ -187,7 +190,16 @@
 							break;
 						case '#strings':
 							//$('#strings_loop_1')[0].muted = false;
-							Event.fire('click', {id:'strings_loop_1'});
+							Event.fire('leap', {id:'strings_loop_1'});
+							break;
+						case '#horn':
+							Event.fire('leap', {id:'horn_loop_1'});
+							break;
+						case '#sax':
+							Event.fire('leap', {id:'sax_loop_1'});
+							break;
+						case '#bass':
+							Event.fire('leap', {id:'bass_loop_1'});
 							break;
 					}
 				}
