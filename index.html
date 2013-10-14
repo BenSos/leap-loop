@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>HTML5</title>
+</head>
+<body>
+
+<!--audio loop id="piano_loop_1" mediagroup="loop1">
+	<source src="loops/piano_loop_1.mp3" type="audio/mpeg" />
+</audio>
+<audio loop muted id="strings_loop_1" mediagroup="loop1">
+	<source src="loops/strings_loop_1.mp3" type="audio/mpeg" />
+</audio>
+<audio loop muted id="horn_loop_1" mediagroup="loop1">
+	<source src="loops/horn_loop_1.mp3" type="audio/mpeg" />
+</audio>
+<audio loop muted id="sax_loop_1" mediagroup="loop1">
+	<source src="loops/sax_loop_1.mp3" type="audio/mpeg" />
+</audio>
+<audio loop muted id="bass_loop_1" mediagroup="loop1">
+	<source src="loops/bass_loop_1.mp3" type="audio/mpeg" />
+</audio-->
+
+<div id="controls">
+	<a href="#play">play</a> |
+	<a href="#pause">pause</a> |
+	<a href="#piano">piano</a> |
+	<a href="#strings">strings</a> |
+	<a href="#horn">horn</a> |
+	<a href="#sax">sax</a> |
+	<a href="#bass">bass</a>
+</div>
+
+<script src="http://code.jquery.com/jquery.js"></script>
+<script type="text/javascript">
+	var Loop = function(param) {
+		this.init(param);
+	}
+
+	Loop.prototype = {
+		mp3 		: '',
+		audio 		: null,
+		mediagroup	: 'mediagroup',
+		muted		: true,
+		loop		: true,
+		controller	: null,
+		id			: '',
+		state		: 0,
+		states		: ['pause', 'play'],
+		param		: null,
+
+		init : function(param)
+		{
+			this.mp3 			= param.mp3;
+			
+			var audio 			= new Audio(this.mp3);
+			audio.mediagroup 	= param.mediagroup || this.mediagroup;
+			audio.muted 		= param.muted || param.muted === false ? param.muted : this.muted;
+			audio.loop			= param.loop || param.loop === false ? param.loop : this.loop;
+			this.id 			= this.mp3.substring(this.mp3.lastIndexOf('/') + 1, this.mp3.lastIndexOf('.'));
+			audio.id			= this.id;
+
+			this.audio 			= audio;
+
+			this.param			= param;
+		},
+
+		play : function(id)
+		{
+			if (id !== this.id) { this.audio.play(); } else { this.changeState(false); }
+		},
+
+		pause : function(id)
+		{
+			this.changeState(true);
+		},
+
+		toggle : function(id)
+		{
+			this[this.states[1 - this.state]](id);
+		},
+
+		changeState : function(isMuted) {
+			this.audio.muted = isMuted;
+			this.state = 1 - this.state;
+		}
+	}
+
+	var Event = {
+		fire : function(name, param, target)
+		{
+			target = target || document;
+
+			var e = document.createEvent('Events');
+			e.initEvent(name, true, false);
+			if (param) {
+				for (var p in param) {
+					if (param.hasOwnProperty(p)) {
+						e[p] = param[p];
+					}
+				}
+			}
+
+			target.dispatchEvent(e);
+		}
+	}
+
+	var Controller = {
+		loops	: [],
+		ids		: [],
+		state	: 0,
+		states	: ['pause', 'play'],
+
+		init	: function(loops)
+		{
+			this.loops = loops;
+			for (var i = loops.length; --i; ) {
+				this.ids.push(loops[i].id);
+			}
+
+			var that = this;
+			document.addEventListener('click', function(e) {
+				e.preventDefault();
+				
+				if (that.ids.indexOf(e.id) !== -1) {
+					that.toggle(e.id);
+				}
+			}, false);
+		},
+
+		play	: function(id)
+		{
+			this.changeState('play', id);
+		},
+
+		pause	: function(id)
+		{
+			this.changeState('pause', id);
+		},
+
+		toggle	: function(id)
+		{
+			if (id) {
+				for (var i = loops.length; --i; ) {
+					if (loops[i].id === id) {
+						loops[i].toggle(id);
+					}
+				}
+			} else {
+				//if (this.state === 'play') { this.changeState('pause'); } else { this.changeState('play'); }
+			}
+		},
+
+		changeState	: function(state, id) {
+			for (var i = 0, l = loops.length; i < l; ++i) {
+				loops[i][state](id);
+			}
+
+			this.state = state;
+		}
+	}
+
+	var loops = [];
+	loops.push(new Loop({mp3:'loops/piano_loop_1.mp3', muted:false}));
+	loops.push(new Loop({mp3:'loops/strings_loop_1.mp3', muted:true}));
+
+	Controller.init(loops);
+
+	var Audio = {
+		init : function()
+		{
+			//var audio = document.querySelector('audio');
+			//var controller = audio.controller;
+
+			document.getElementById('controls').addEventListener('click', function(e) {
+				e.stopPropagation();
+				e.preventDefault();
+				if (e.target.href) {
+					var fragment = e.target.href.substring(e.target.href.indexOf('#'));
+					switch(fragment) {
+						case '#play':
+							Controller.play();
+							break;
+						case '#pause':
+							Controller.pause();
+							break;
+						case '#strings':
+							//$('#strings_loop_1')[0].muted = false;
+							Event.fire('click', {id:'strings_loop_1'});
+							break;
+					}
+				}
+			}, false);
+
+			/*
+			$('#controls').click(function(e) {
+				e.preventDefault();
+				if (e.target.href) {
+					var fragment = e.target.href.substring(e.target.href.indexOf('#'));
+					switch (fragment) {
+						case '#play':
+							//controller.play();
+							Controller.play();
+							break;
+						case '#pause':
+							Controller.pause();
+							break;
+						case '#piano':
+							$('#piano_loop_1')[0].muted = false;
+							break;
+						case '#strings':
+							//$('#strings_loop_1')[0].muted = false;
+							Event.fire('click', {id:'strings_loop_1'});
+							break;
+						case '#horn':
+							$('#horn_loop_1')[0].muted = false;
+							break;
+						case '#sax':
+							$('#sax_loop_1')[0].muted = false;
+							break;
+						case '#bass':
+							$('#bass_loop_1')[0].muted = false;
+							break;
+					}
+				}
+				//$('#piano_loop_1')[0].controller.play();
+				//$('#horn_loop_1')[0].muted = false;
+			});
+
+			audio.addEventListener('ended', function(e) {
+				controller.currentTime = 0;
+				controller.play();
+			}, false);
+
+			$('#piano_loop_1').on('ended', function(e) {
+				this.controller.currentTime = 0;
+				this.controller.play();
+			});
+			*/
+		}
+	}
+
+	Audio.init();
+</script>
+
+</body>
+</html>
