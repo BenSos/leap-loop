@@ -2,25 +2,9 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8" />
-	<title>HTML5</title>
+	<title>Leap Loops</title>
 </head>
 <body>
-
-<!--audio loop id="piano_loop_1" mediagroup="loop1">
-	<source src="loops/piano_loop_1.mp3" type="audio/mpeg" />
-</audio>
-<audio loop muted id="strings_loop_1" mediagroup="loop1">
-	<source src="loops/strings_loop_1.mp3" type="audio/mpeg" />
-</audio>
-<audio loop muted id="horn_loop_1" mediagroup="loop1">
-	<source src="loops/horn_loop_1.mp3" type="audio/mpeg" />
-</audio>
-<audio loop muted id="sax_loop_1" mediagroup="loop1">
-	<source src="loops/sax_loop_1.mp3" type="audio/mpeg" />
-</audio>
-<audio loop muted id="bass_loop_1" mediagroup="loop1">
-	<source src="loops/bass_loop_1.mp3" type="audio/mpeg" />
-</audio-->
 
 <div id="controls">
 	<a href="#play">play</a> |
@@ -33,7 +17,9 @@
 	<a href="#string3">string 3</a>
 </div>
 
-<script src="http://code.jquery.com/jquery.js"></script>
+<div id="status">Hands: 0, Pointables: 0</div>
+
+<script src="js/leap.min.js"></script>
 <script type="text/javascript">
 	var Loop = function(param) {
 		this.init(param);
@@ -50,6 +36,7 @@
 		state		: 0,
 		states		: ['pause', 'play'],
 		param		: null,
+		volume		: 1,
 
 		init : function(param)
 		{
@@ -61,6 +48,7 @@
 			audio.loop			= param.loop || param.loop === false ? param.loop : this.loop;
 			this.id 			= this.mp3.substring(this.mp3.lastIndexOf('/') + 1, this.mp3.lastIndexOf('.'));
 			audio.id			= this.id;
+			audio.volume		= param.volume || this.volume;
 
 			this.audio 			= audio;
 
@@ -108,23 +96,30 @@
 	}
 
 	var Controller = {
-		loops	: [],
-		ids		: [],
+		loops	: {},
 		state	: 0,
 		states	: ['pause', 'play'],
+		events	: { hands:[ [] , [[],[],[],[],[],[]] , [[],[],[],[],[],[]] ] },
 
 		init	: function(loops)
 		{
-			this.loops = loops;
-			for (var i = loops.length; --i; ) {
-				this.ids.push(loops[i].id);
+			for (var i = loops.length; i--; ) {
+				this.loops[loops[i].id] = loops[i];
+				if (loops[i].param.hands && loops[i].param.pointables) {
+					this.events.hands[loops[i].param.hands][loops[i].param.pointables].push(loops[i].id);
+				}
+				/*if (loops[i].param.hands) {
+					this.events.hands[loops[i].param.hands].push(loops[i].id);
+				}
+				if (loops[i].param.pointables) {
+					this.events.hands[loops[i].param.pointables].push(loops[i].id);
+				}*/
 			}
 
 			var that = this;
 			document.addEventListener('leap', function(e) {
 				e.preventDefault();
-				
-				if (that.ids.indexOf(e.id) !== -1) {
+				if (that.loops[e.id]) {
 					that.toggle(e.id);
 				}
 			}, false);
@@ -143,13 +138,7 @@
 		toggle	: function(id)
 		{
 			if (id) {
-				for (var i = loops.length; --i; ) {
-					if (loops[i].id === id) {
-						loops[i].toggle(id);
-					}
-				}
-			} else {
-				//if (this.state === 'play') { this.changeState('pause'); } else { this.changeState('play'); }
+				this.loops[id].toggle(id);
 			}
 		},
 
@@ -159,25 +148,48 @@
 			}
 
 			this.state = state;
+		},
+
+		getFrame : function(frame) {
+			document.getElementById('status').innerHTML = 'Hands: ' + frame.hands.length + ', Pointables: ' + frame.pointables.length;
+			this.raiseEvent(frame.hands.length, frame.pointables.length);
+		},
+
+		raiseEvent : function(hands, pointables) {
+			var events = this.events.hands,
+				playing = [];
+
+			for (var h = 1; h <= hands; ++h) {
+				for (var p = 1; p <= pointables; ++p) {
+					for (var i = 0, l = events[h][p].length; i < l; ++i) {
+						playing.push(events[h][p][i]);
+					}
+				}
+			}
+
+			for (var loop in loops) {
+				if (playing.indexOf(loop)) {
+					loops[loop].play(loop);
+				} else {
+					loops[loop].stop(loop);
+				}
+			}
 		}
 	}
 
 	var loops = [];
-	loops.push(new Loop({mp3:'loops/piano_loop_1.mp3', muted:false}));
-	loops.push(new Loop({mp3:'loops/piano_loop_2.mp3', muted:true}));
-	loops.push(new Loop({mp3:'loops/piano_loop_3.mp3', muted:true}));
-	loops.push(new Loop({mp3:'loops/string_loop_1.mp3', muted:true}));
-	loops.push(new Loop({mp3:'loops/string_loop_2.mp3', muted:true}));
-	loops.push(new Loop({mp3:'loops/string_loop_3.mp3', muted:true}));
+	loops.push(new Loop({mp3:'loops/piano_loop_1.mp3', muted:false, volume:.4, hands:1, pointables:1}));
+	loops.push(new Loop({mp3:'loops/piano_loop_2.mp3', muted:true, volume:.4, hands:1, pointables:2}));
+	loops.push(new Loop({mp3:'loops/piano_loop_3.mp3', muted:true, volume:.4, hands:1, pointables:3}));
+	loops.push(new Loop({mp3:'loops/string_loop_1.mp3', muted:true, volume:.4, hands:1, pointables:4}));
+	loops.push(new Loop({mp3:'loops/string_loop_2.mp3', muted:true, volume:1, hands:1, pointables:5}));
+	loops.push(new Loop({mp3:'loops/string_loop_3.mp3', muted:true, volume:1, hands:2, pointables:1}));
 
 	Controller.init(loops);
 
 	var Audio = {
 		init : function()
 		{
-			//var audio = document.querySelector('audio');
-			//var controller = audio.controller;
-
 			document.getElementById('controls').addEventListener('click', function(e) {
 				e.stopPropagation();
 				e.preventDefault();
@@ -212,56 +224,14 @@
 					}
 				}
 			}, false);
-
-			/*
-			$('#controls').click(function(e) {
-				e.preventDefault();
-				if (e.target.href) {
-					var fragment = e.target.href.substring(e.target.href.indexOf('#'));
-					switch (fragment) {
-						case '#play':
-							//controller.play();
-							Controller.play();
-							break;
-						case '#pause':
-							Controller.pause();
-							break;
-						case '#piano':
-							$('#piano_loop_1')[0].muted = false;
-							break;
-						case '#strings':
-							//$('#strings_loop_1')[0].muted = false;
-							Event.fire('click', {id:'strings_loop_1'});
-							break;
-						case '#horn':
-							$('#horn_loop_1')[0].muted = false;
-							break;
-						case '#sax':
-							$('#sax_loop_1')[0].muted = false;
-							break;
-						case '#bass':
-							$('#bass_loop_1')[0].muted = false;
-							break;
-					}
-				}
-				//$('#piano_loop_1')[0].controller.play();
-				//$('#horn_loop_1')[0].muted = false;
-			});
-
-			audio.addEventListener('ended', function(e) {
-				controller.currentTime = 0;
-				controller.play();
-			}, false);
-
-			$('#piano_loop_1').on('ended', function(e) {
-				this.controller.currentTime = 0;
-				this.controller.play();
-			});
-			*/
 		}
 	}
 
 	Audio.init();
+
+	Leap.loop(function(frame) { Controller.getFrame(frame); });
+
+
 </script>
 
 </body>
