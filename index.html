@@ -25,11 +25,12 @@
 <div id="controls">
 	<a href="#play">play</a> |
 	<a href="#pause">pause</a> |
-	<a href="#piano">piano</a> |
-	<a href="#strings">strings</a> |
-	<a href="#horn">horn</a> |
-	<a href="#sax">sax</a> |
-	<a href="#bass">bass</a>
+	<a href="#piano1">piano 1</a> |
+	<a href="#piano2">piano 2</a> |
+	<a href="#piano3">piano 3</a> |
+	<a href="#string1">string 1</a> |
+	<a href="#string2">string 2</a> |
+	<a href="#string3">string 3</a>
 </div>
 
 <script src="http://code.jquery.com/jquery.js"></script>
@@ -163,10 +164,11 @@
 
 	var loops = [];
 	loops.push(new Loop({mp3:'loops/piano_loop_1.mp3', muted:false}));
-	loops.push(new Loop({mp3:'loops/strings_loop_1.mp3', muted:true}));
-	loops.push(new Loop({mp3:'loops/horn_loop_1.mp3', muted:true}));
-	loops.push(new Loop({mp3:'loops/sax_loop_1.mp3', muted:true}));
-	loops.push(new Loop({mp3:'loops/bass_loop_1.mp3', muted:true}));
+	loops.push(new Loop({mp3:'loops/piano_loop_2.mp3', muted:true}));
+	loops.push(new Loop({mp3:'loops/piano_loop_3.mp3', muted:true}));
+	loops.push(new Loop({mp3:'loops/string_loop_1.mp3', muted:true}));
+	loops.push(new Loop({mp3:'loops/string_loop_2.mp3', muted:true}));
+	loops.push(new Loop({mp3:'loops/string_loop_3.mp3', muted:true}));
 
 	Controller.init(loops);
 
@@ -188,18 +190,24 @@
 						case '#pause':
 							Controller.pause();
 							break;
-						case '#strings':
+						case '#piano1':
+							Event.fire('leap', {id:'piano_loop_1'});
+							break;
+						case '#piano2':
 							//$('#strings_loop_1')[0].muted = false;
-							Event.fire('leap', {id:'strings_loop_1'});
+							Event.fire('leap', {id:'piano_loop_2'});
 							break;
-						case '#horn':
-							Event.fire('leap', {id:'horn_loop_1'});
+						case '#piano3':
+							Event.fire('leap', {id:'piano_loop_3'});
 							break;
-						case '#sax':
-							Event.fire('leap', {id:'sax_loop_1'});
+						case '#string1':
+							Event.fire('leap', {id:'string_loop_1'});
 							break;
-						case '#bass':
-							Event.fire('leap', {id:'bass_loop_1'});
+						case '#string2':
+							Event.fire('leap', {id:'string_loop_2'});
+							break;
+						case '#string3':
+							Event.fire('leap', {id:'string_loop_3'});
 							break;
 					}
 				}
