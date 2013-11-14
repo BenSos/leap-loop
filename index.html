@@ -109,6 +109,7 @@
 		getFrame : function(frame) {
 			document.getElementById('status').innerHTML = 'Hands: ' + frame.hands.length + ', Pointables: ' + frame.pointables.length;
 			this.raiseEvent(frame.pointables.length);
+			this.setGlobalVolume(frame, frame.pointables.length);
 
 			if (!this.status && frame.hands.length && frame.pointables.length) this.play();
 		},
@@ -128,6 +129,41 @@
 				} else {
 					this.loops[loop].pause(loop);
 				}
+			}
+		},
+
+		//Sets global volume of all loops by raising and lowering your hand over the Leap
+		//Taken from Bryan's implementataion and retrofitted to work for all loops
+		setGlobalVolume : function(frame, pointables){
+			var yThreshold = 300.0;//max out at millimeters away from sensor
+			var volOutput = 0;
+			var playing = [];
+
+			for (var i = 0; i < frame.hands.length; i++) {
+	      		var hand = frame.hands[0];//not accounting for two hands - not sure what Bryan's intention was
+	      		var volChange = 0;
+	      		var yVal = 0;
+
+	      		yVal = hand.palmPosition;
+	      		volChange = parseFloat(yVal[1].toFixed(1));
+	      		volOutput = volChange/yThreshold;
+    		}	
+
+    		if (volOutput > 1) 
+    			volOutput = 1;
+
+    		for (var p = 1; p <= pointables; ++p) {
+				for (var i = 0, l = this.pointables[p].length; i < l; ++i) {
+					playing.push(this.pointables[p][i]);
+				}
+			}
+
+			for (var loop in this.loops) {
+				if (playing.indexOf(loop) != -1) {
+					console.log("volume " + this.loops[loop].volume)
+					this.loops[loop].volume = volOutput;
+					this.loops[loop].audio.volume = volOutput;
+				} 
 			}
 		}
 	}
